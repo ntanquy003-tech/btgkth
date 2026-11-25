@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bài tập 36 - Mini Game Hứng Táo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #f4f4f9;
+            margin-top: 20px;
+        }
+        .hud {
+            width: 500px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        #start-btn {
+            padding: 8px 16px;
+            font-size: 16px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #start-btn:hover {
+            background-color: #218838;
+        }
+        /* Yêu cầu giao diện khung game */
+        #game-container {
+            width: 500px;
+            height: 400px;
+            border: 2px solid #333;
+            border-radius: 10px;
+            background-color: #e0f7fa;
+            position: relative;
+            overflow: hidden;
+        }
+        /* Yêu cầu giỏ hứng */
+        #basket {
+            width: 80px;
+            height: 20px;
+            background-color: #8b4513; /* Màu nâu */
+            border-radius: 0 0 10px 10px;
+            position: absolute;
+            bottom: 10px;
+            left: 210px;
+        }
+        /* Yêu cầu quả táo */
+        #apple {
+            width: 24px;
+            height: 24px;
+            background-color: #e53935;
+            border-radius: 50%;
+            position: absolute;
+            top: 0px;
+            left: 238px;
+            box-shadow: inset -3px -3px 5px rgba(0,0,0,0.2);
+        }
+        /* Cuống táo trang trí nhỏ */
+        #apple::after {
+            content: '';
+            position: absolute;
+            top: -5px;
+            left: 10px;
+            width: 4px;
+            height: 6px;
+            background-color: #4caf50;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="hud">
+        <div>Điểm số: <span id="score">0</span></div>
+        <div>Mạng sống: <span id="lives">3</span></div>
+        <button id="start-btn">Bắt đầu</button>
+    </div>
+
+    <div id="game-container">
+        <div id="apple"></div>
+        <div id="basket"></div>
+    </div>
+
+    <script>
+        const gameContainer = document.getElementById('game-container');
+        const basket = document.getElementById('basket');
+        const apple = document.getElementById('apple');
+        const scoreEl = document.getElementById('score');
+        const livesEl = document.getElementById('lives');
+        const startBtn = document.getElementById('start-btn');
+
+        const containerWidth = 500;
+        const containerHeight = 400;
+        const basketWidth = 80;
+        const basketHeight = 20;
+        const basketBottom = 10;
+        const appleSize = 24;
+
+        let score = 0;
+        let lives = 3;
+        let basketX = 210;
+        let appleX = 238;
+        let appleY = 0;
+        let fallSpeed = 3;
+        let gameInterval = null;
+        let isPlaying = false;
+
+        document.addEventListener('keydown', function(event) {
+            if (!isPlaying) return;
+            const step = 25; // Tốc độ di chuyển giỏ
+
+            if (event.key === 'ArrowLeft') {
+                basketX -= step;
+                if (basketX < 0) basketX = 0; // Giới hạn biên trái
+            } else if (event.key === 'ArrowRight') {
+                basketX += step;
+                if (basketX > containerWidth - basketWidth) {
+                    basketX = containerWidth - basketWidth; // Giới hạn biên phải
+                }
+            }
+            basket.style.left = basketX + 'px';
+        });
+
+        function resetApple() {
+            appleY = 0;
+            appleX = Math.floor(Math.random() * (containerWidth - appleSize));
+            apple.style.top = appleY + 'px';
+            apple.style.left = appleX + 'px';
+        }
+
+        function updateGame() {
+            appleY += fallSpeed;
+            apple.style.top = appleY + 'px';
+
+            const basketTop = containerHeight - basketBottom - basketHeight;
+            const basketBottomEdge = containerHeight - basketBottom;
+
+            if (
+                appleY + appleSize >= basketTop &&
+                appleY <= basketBottomEdge &&
+                appleX + appleSize >= basketX &&
+                appleX <= basketX + basketWidth
+            ) {
+                score++;
+                scoreEl.textContent = score;
+                fallSpeed += 0.3; // Tốc độ rơi tăng nhẹ
+                resetApple();
+                return;
+            }
+
+            if (appleY + appleSize >= containerHeight) {
+                lives--;
+                livesEl.textContent = lives;
+
+             
+                if (lives <= 0) {
+                    clearInterval(gameInterval);
+                    isPlaying = false;
+                    startBtn.disabled = false;
+                    startBtn.textContent = "Chơi lại";
+                    alert("Game Over! Điểm của bạn là: " + score);
+                } else {
+                    resetApple();
+                }
+            }
+        }
+
+      
+        startBtn.addEventListener('click', function() {
+            if (isPlaying) return;
+            
+    
+            score = 0;
+            lives = 3;
+            fallSpeed = 3;
+            basketX = 210;
+            scoreEl.textContent = score;
+            livesEl.textContent = lives;
+            basket.style.left = basketX + 'px';
+            
+            resetApple();
+            isPlaying = true;
+            startBtn.disabled = true;
+
+            clearInterval(gameInterval);
+            gameInterval = setInterval(updateGame, 20); // ~50 FPS
+        });
+    </script>
+</body>
+</html>
